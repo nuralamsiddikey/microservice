@@ -10,6 +10,12 @@ services:
       - mongodb_data:/data/db  # Persist MongoDB data between container restarts
     networks:
       - microservices-network
+    restart: unless-stopped
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -22,6 +28,12 @@ services:
       - RABBITMQ_DEFAULT_PASS=guest  # Default RabbitMQ password
     networks:
       - microservices-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
 
   mongo-express:
     image: mongo-express:latest
@@ -33,39 +45,55 @@ services:
       - ME_CONFIG_BASICAUTH_USERNAME=admin  # Basic authentication username
       - ME_CONFIG_BASICAUTH_PASSWORD=admin  # Basic authentication password
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     networks:
       - microservices-network
+    restart: unless-stopped
 
-  # auth-service:
-  #   build:
-  #     context: ./auth-service  # Directory for the Auth Service Dockerfile
-  #   container_name: auth-service
-  #   ports:
-  #     - "3000:3000"  # Expose the port your auth service listens on
-  #   environment:
-  #     - MONGODB_URI=mongodb://mongodb:27017/auth_db  # MongoDB connection URL for auth-service
-  #     - RABBITMQ_URI=amqp://guest:guest@rabbitmq:5672  # RabbitMQ connection URL for auth-service
-  #   depends_on:
-  #     - mongodb  # Ensure MongoDB starts before auth-service
-  #     - rabbitmq  # Ensure RabbitMQ starts before auth-service
-  #   networks:
-  #     - microservices-network
+  auth-service:
+    build:
+      context: ./auth-service  # Directory for the Auth Service Dockerfile
+    container_name: auth-service
+    ports:
+      - "3000:3000"  # Expose the port your auth service listens on
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/auth_db  # MongoDB connection URL for auth-service
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672  # RabbitMQ connection URL for auth-service (fixed variable name)
+    volumes:
+      - ./auth-service:/usr/src/app  # Mount source code for hot reloading
+      - /usr/src/app/node_modules  # Prevent node_modules from being overwritten
+    command: npm run start:dev  # Enable hot reloading with NestJS
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    restart: unless-stopped
 
-  # product-service:
-  #   build:
-  #     context: ./product-service  # Directory for the Product Service Dockerfile
-  #   container_name: product-service
-  #   ports:
-  #     - "3001:3001"  # Expose the port your product service listens on
-  #   environment:
-  #     - MONGODB_URI=mongodb://mongodb:27017/product_db  # MongoDB connection URL for product-service
-  #     - RABBITMQ_URI=amqp://guest:guest@rabbitmq:5672  # RabbitMQ connection URL for product-service
-  #   depends_on:
-  #     - mongodb  # Ensure MongoDB starts before product-service
-  #     - rabbitmq  # Ensure RabbitMQ starts before product-service
-  #   networks:
-  #     - microservices-network
+  product-service:
+    build:
+      context: ./product-service  # Directory for the Product Service Dockerfile
+    container_name: product-service
+    ports:
+      - "3001:3001"  # Expose the port your product service listens on
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/product_db  # MongoDB connection URL for product-service
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672  # RabbitMQ connection URL for product-service (fixed variable name)
+    volumes:
+      - ./product-service:/usr/src/app  # Mount source code for hot reloading
+      - /usr/src/app/node_modules  # Prevent node_modules from being overwritten
+    command: npm run start:dev  # Enable hot reloading with NestJS
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    restart: unless-stopped
 
 networks:
   microservices-network:

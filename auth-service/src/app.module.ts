@@ -5,9 +5,10 @@ import { ConfigModule } from './config/config.module';
 import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './users/users.module';
 import { RabbitmqModule } from './rabbitmq/rabbitmq.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
-  imports: [ConfigModule, DatabaseModule, UsersModule, RabbitmqModule],
+  imports: [ConfigModule, DatabaseModule, UsersModule, RabbitmqModule, AuthModule],
   controllers: [AppController],
   providers: [AppService],
 })
