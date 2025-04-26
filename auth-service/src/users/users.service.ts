@@ -17,7 +17,7 @@ export class UsersService {
       ...user,
       password: hashedPassword,
     });
-    return newUser.save();
+    return await newUser.save();
   }
 
   async findByEmail(email: string): Promise<User | null>{

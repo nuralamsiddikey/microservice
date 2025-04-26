@@ -8,8 +8,6 @@ import * as jwt from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
 import { RabbitmqService } from '../rabbitmq/rabbitmq.service';
 
-
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -34,10 +32,13 @@ export class AuthService {
     });
 
     return {
-      userId: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
+      message: 'Registration successfull',
+      data: {
+        userId: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     };
   }
 
