@@ -8,6 +8,8 @@ import * as jwt from 'jsonwebtoken';
 import { ConfigService } from '@nestjs/config';
 import { RabbitmqService } from '../rabbitmq/rabbitmq.service';
 
+
+
 @Injectable()
 export class AuthService {
   constructor(
