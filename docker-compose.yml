@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"  # Expose MongoDB port
+    volumes:
+      - mongodb_data:/data/db  # Persist MongoDB data between container restarts
+    networks:
+      - microservices-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"  # AMQP protocol port for RabbitMQ
+      - "15672:15672"  # Management UI port for RabbitMQ
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest  # Default RabbitMQ user
+      - RABBITMQ_DEFAULT_PASS=guest  # Default RabbitMQ password
+    networks:
+      - microservices-network
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    ports:
+      - "8081:8081"  # Expose mongo-express on port 8081
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://mongodb:27017  # MongoDB connection URL
+      - ME_CONFIG_BASICAUTH_USERNAME=admin  # Basic authentication username
+      - ME_CONFIG_BASICAUTH_PASSWORD=admin  # Basic authentication password
+    depends_on:
+      - mongodb
+    networks:
+      - microservices-network
+
+  # auth-service:
+  #   build:
+  #     context: ./auth-service  # Directory for the Auth Service Dockerfile
+  #   container_name: auth-service
+  #   ports:
+  #     - "3000:3000"  # Expose the port your auth service listens on
+  #   environment:
+  #     - MONGODB_URI=mongodb://mongodb:27017/auth_db  # MongoDB connection URL for auth-service
+  #     - RABBITMQ_URI=amqp://guest:guest@rabbitmq:5672  # RabbitMQ connection URL for auth-service
+  #   depends_on:
+  #     - mongodb  # Ensure MongoDB starts before auth-service
+  #     - rabbitmq  # Ensure RabbitMQ starts before auth-service
+  #   networks:
+  #     - microservices-network
+
+  # product-service:
+  #   build:
+  #     context: ./product-service  # Directory for the Product Service Dockerfile
+  #   container_name: product-service
+  #   ports:
+  #     - "3001:3001"  # Expose the port your product service listens on
+  #   environment:
+  #     - MONGODB_URI=mongodb://mongodb:27017/product_db  # MongoDB connection URL for product-service
+  #     - RABBITMQ_URI=amqp://guest:guest@rabbitmq:5672  # RabbitMQ connection URL for product-service
+  #   depends_on:
+  #     - mongodb  # Ensure MongoDB starts before product-service
+  #     - rabbitmq  # Ensure RabbitMQ starts before product-service
+  #   networks:
+  #     - microservices-network
+
+networks:
+  microservices-network:
+    driver: bridge  # Use the bridge network for communication between services
+
+volumes:
+  mongodb_data:
+    driver: local  # Persist MongoDB data to avoid losing it on container restart
