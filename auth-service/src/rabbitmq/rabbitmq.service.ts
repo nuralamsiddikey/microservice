@@ -1,4 +1,3 @@
-// auth-service/src/rabbitmq/rabbitmq.service.ts
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as amqp from 'amqplib';
@@ -17,15 +16,14 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
   async onModuleDestroy() {
     await this.close();
   }
+
   private async connect() {
     try {
-      // Use correct type casting for the amqplib connection
       const rabbitmqUrl = this.configService.get<string>('RABBITMQ_URL');
       if (!rabbitmqUrl) {
         throw new Error('RABBITMQ_URL is not defined');
       }
 
-      // Cast the connection to the proper type
       this.connection = (await amqp.connect(
         rabbitmqUrl,
       )) as unknown as amqp.Connection;
