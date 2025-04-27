@@ -17,7 +17,7 @@ export class AuthService {
         { token, correlationId },
         `token.validate.response.${correlationId}`
       );
-      
+  
       if (!response.valid) {
         throw new UnauthorizedException('Invalid token');
       }

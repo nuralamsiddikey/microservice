@@ -18,16 +18,26 @@ export class ProductsService {
   async create(
     createProductDto: CreateProductDto,
     userId: string,
-  ): Promise<Product> {
+  ): Promise<{ message: string; data: Product }> {
     const product = new this.productModel({
       ...createProductDto,
       userId,
     });
-    return product.save();
+
+    const result = await product.save();
+
+    return {
+      message: 'Successfully created the product',
+      data: result,
+    };
   }
 
-  async findAll(): Promise<Product[]> {
-    return this.productModel.find().exec();
+  async findAll(): Promise<{ message: string; data: Product[] }> {
+    const result = await this.productModel.find().exec();
+    return {
+      message: 'Successfully fetched products',
+      data: result,
+    };
   }
 
   async findOne(id: string): Promise<Product> {

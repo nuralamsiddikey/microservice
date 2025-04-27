@@ -60,12 +60,15 @@ export class AuthService {
     const refreshToken = this.generateRefreshToken(user);
 
     return {
-      userId: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      accessToken,
-      refreshToken,
+      message: 'Login successfull',
+      data: {
+        userId: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        accessToken,
+        refreshToken,
+      },
     };
   }
 
@@ -75,8 +78,10 @@ export class AuthService {
         token,
         this.configService.get<string>('JWT_SECRET') || '',
       );
+    
       return { valid: true, user: payload };
     } catch (error) {
+      console.log("error here",error)
       return { valid: false };
     }
   }

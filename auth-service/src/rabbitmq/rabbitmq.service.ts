@@ -5,8 +5,8 @@ import * as amqp from 'amqplib';
 
 @Injectable()
 export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
-    private connection: amqp.Connection | null = null;
-    private channel: amqp.Channel | null = null;
+  private connection: amqp.Connection | null = null;
+  private channel: amqp.Channel | null = null;
 
   constructor(private configService: ConfigService) {}
 
@@ -24,19 +24,24 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
       if (!rabbitmqUrl) {
         throw new Error('RABBITMQ_URL is not defined');
       }
-      
+
       // Cast the connection to the proper type
-      this.connection = await amqp.connect(rabbitmqUrl) as unknown as amqp.Connection;
+      this.connection = (await amqp.connect(
+        rabbitmqUrl,
+      )) as unknown as amqp.Connection;
+
       this.channel = await (this.connection as any).createChannel();
-      
+
       // Declare exchanges we'll use
       if (this.channel) {
-        await this.channel.assertExchange('auth_exchange', 'topic', { durable: true });
+        await this.channel.assertExchange('auth_exchange', 'topic', {
+          durable: true,
+        });
       } else {
         throw new Error('Channel is not initialized');
       }
-      
-      console.log('Connected to RabbitMQ');
+
+      console.log('Connected auth service to RabbitMQ');
     } catch (error) {
       console.error('Failed to connect to RabbitMQ:', error);
       // Retry connection after delay
@@ -57,20 +62,27 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
     if (!this.channel) {
       await this.connect();
     }
-    
+
     const messageBuffer = Buffer.from(JSON.stringify(message));
     if (this.channel) {
-      return this.channel.publish(exchange, routingKey, messageBuffer, { persistent: true });
+      return this.channel.publish(exchange, routingKey, messageBuffer, {
+        persistent: true,
+      });
     } else {
       throw new Error('Channel is not initialized');
     }
   }
 
-  async consumeMessages(queue: string, exchange: string, pattern: string, callback: (message: any) => void) {
+  async consumeMessages(
+    queue: string,
+    exchange: string,
+    pattern: string,
+    callback: (message: any) => void,
+  ) {
     if (!this.channel) {
       await this.connect();
     }
-    
+
     // Assert queue and bind to exchange with routing pattern
     if (this.channel) {
       await this.channel.assertQueue(queue, { durable: true });
@@ -78,7 +90,7 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
       throw new Error('Channel is not initialized');
     }
     await this.channel.bindQueue(queue, exchange, pattern);
-    
+
     // Start consuming messages
     await this.channel.consume(queue, (msg) => {
       if (msg) {
@@ -87,7 +99,9 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
         if (this.channel) {
           this.channel.ack(msg);
         } else {
-          console.error('Channel is not initialized to acknowledge the message');
+          console.error(
+            'Channel is not initialized to acknowledge the message',
+          );
         }
       }
     });

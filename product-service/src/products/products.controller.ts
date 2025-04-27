@@ -21,7 +21,7 @@ export class ProductsController {
   @Post()
   @UseGuards(AuthGuard)
   create(@Body() createProductDto: CreateProductDto, @Request() req) {
-    return this.productService.create(createProductDto, req.user.sub);
+   return this.productService.create(createProductDto, req.user.sub);
   }
 
   @Get()
