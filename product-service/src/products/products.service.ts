@@ -56,7 +56,7 @@ export class ProductsService {
     id: string,
     updateProductDto: UpdateProductDto,
     userId: string,
-  ): Promise<Product> {
+  ): Promise<{ message: string; data: Product }> {
     const product = await this.productModel.findById(id);
 
     if (!product) {
@@ -77,7 +77,10 @@ export class ProductsService {
       throw new NotFoundException('Failed to update product');
     }
 
-    return updatedProduct;
+    return {
+      message: 'Product updated successfully',
+      data: updatedProduct,
+    };
   }
 
   async remove(id: string, userId: string): Promise<{ message: string }> {

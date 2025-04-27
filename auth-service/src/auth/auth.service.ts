@@ -96,7 +96,7 @@ export class AuthService {
     return jwt.sign(
       payload,
       this.configService.get<string>('JWT_SECRET') || '',
-      { expiresIn: '1h' },
+      { expiresIn: '1d' },
     );
   }
 
